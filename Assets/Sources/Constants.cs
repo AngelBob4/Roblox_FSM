@@ -1,5 +1,8 @@
-public class Constants
+namespace Roblox
 {
-    public const string IsRunning = "isRunning";
-    public const string IsJumping = "isJumping";
+    public class Constants
+    {
+        public const string IsRunning = "isRunning";
+        public const string IsJumping = "isJumping";
+    }
 }

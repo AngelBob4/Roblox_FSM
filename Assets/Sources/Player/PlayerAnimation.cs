@@ -1,23 +1,26 @@
 using UnityEngine;
 
-public class PlayerAnimation : MonoBehaviour
+namespace Roblox.Player
 {
-    [SerializeField] private Animator _animator;
-
-    public void HandleAnimations(bool isJumping, Vector3 moveDirection)
+    public class PlayerAnimation : MonoBehaviour
     {
-        bool isRunning;
+        [SerializeField] private Animator _animator;
 
-        if (moveDirection != Vector3.zero)
+        public void HandleAnimations(bool isJumping, Vector3 moveDirection)
         {
-            isRunning = true;
-        }
-        else
-        {
-            isRunning = false;
-        }
+            bool isRunning;
 
-        _animator.SetBool(Constants.IsRunning, isRunning);
-        _animator.SetBool(Constants.IsJumping, isJumping);
+            if (moveDirection != Vector3.zero)
+            {
+                isRunning = true;
+            }
+            else
+            {
+                isRunning = false;
+            }
+
+            _animator.SetBool(Constants.IsRunning, isRunning);
+            _animator.SetBool(Constants.IsJumping, isJumping);
+        }
     }
 }
