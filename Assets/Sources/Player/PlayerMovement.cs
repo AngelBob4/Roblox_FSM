@@ -12,10 +12,11 @@ namespace Roblox.Player
         private float _jumpSpeed = 7f;
         private float _rotationSpeed = 100f;
 
+        private Vector3 moveDirection;
         private Vector3 _verticalVelocity = Vector3.zero;
         private Vector3 _horizontalVelocity = Vector3.zero;
         private bool _jumping;
-        private MovementType _currentMovementType = MovementType.None;
+        private MovementState _currentMovementState = MovementState.None;
 
         private CharacterController _characterController;
 
@@ -26,7 +27,8 @@ namespace Roblox.Player
 
         private void Update()
         {
-            ResetMovementType();
+            ResetState();
+            Move();
         }
 
         public void SetAxises(float horizontalValue, float verticalValue)
@@ -41,65 +43,65 @@ namespace Roblox.Player
             _jumping = true;
         }
 
-        public void Rotate(Vector3 moveDirection)
+        private void Move()
         {
-            moveDirection = new Vector3(moveDirection.x, 0, moveDirection.z);
-            transform.rotation = Quaternion.LookRotation(moveDirection);
-        }
+            moveDirection = _horizontalVelocity + _verticalVelocity;
 
-        private void ResetMovementType()
-        {
-            Vector3 moveDirection = _horizontalVelocity + _verticalVelocity;
-
-            switch (_currentMovementType)
+            switch (_currentMovementState)
             {
-                case MovementType.None:
+                case MovementState.None:
                     break;
 
-                case MovementType.Running:
+                case MovementState.Running:
+                    if (_jumping)
+                        _verticalVelocity = Vector3.up * _jumpSpeed;
+                    else
+                        _verticalVelocity = Vector3.down;
+
+                    _characterController.Move(moveDirection * Time.deltaTime);
+                    _playerAnimation.HandleAnimations(_jumping, _horizontalVelocity);
+                    if (_horizontalVelocity != Vector3.zero)
+                        Rotate(moveDirection);
                     break;
 
-                case MovementType.Jumping:
+                case MovementState.Jumping:
+                    _jumping = false;
+                    Vector3 horizontalVelocity = _horizontalVelocity;
+                    horizontalVelocity.y = 0;
+                    _verticalVelocity += Physics.gravity * Time.deltaTime;
+                    moveDirection = horizontalVelocity + _verticalVelocity;
+                    _characterController.Move(moveDirection * Time.deltaTime);
+                    _playerAnimation.HandleAnimations(_jumping, _horizontalVelocity);
+                    if (_horizontalVelocity != Vector3.zero)
+                        Rotate(moveDirection);
                     break;
 
                 default:
                     break;
             }
+        }
+
+        private void Rotate(Vector3 moveDirection)
+        {
+            moveDirection = new Vector3(moveDirection.x, 0, moveDirection.z);
+            transform.rotation = Quaternion.LookRotation(moveDirection);
+        }
+
+        private void ResetState()
+        {
+            if (_horizontalVelocity == Vector3.zero)
+            {
+                _currentMovementState = MovementState.None;
+            }
 
             if (_characterController.isGrounded)
-            {
-                if (_jumping)
-                {
-                    _verticalVelocity = Vector3.up * _jumpSpeed;
-                }
-                else
-                {
-                    _verticalVelocity = Vector3.down;
-                }
-
-                _characterController.Move(moveDirection * Time.deltaTime);
-            }
+                _currentMovementState = MovementState.Running;
             else
-            {
-                _jumping = false;
-                Vector3 horizontalVelocity = _horizontalVelocity;
-                horizontalVelocity.y = 0;
-                _verticalVelocity += Physics.gravity * Time.deltaTime;
-
-                moveDirection = horizontalVelocity + _verticalVelocity;
-                _characterController.Move(moveDirection * Time.deltaTime);
-            }
-
-            if (_horizontalVelocity != Vector3.zero)
-            {
-                Rotate(moveDirection);
-            }
-
-            _playerAnimation.HandleAnimations(_jumping, _horizontalVelocity);
+                _currentMovementState = MovementState.Jumping;
         }
     }
 
-    public enum MovementType
+    public enum MovementState
     {
         None,
         Running,
